@@ -34,3 +34,8 @@ make mrproper
 cp /sources/lfs81_lx4.14_config .config
 make oldconfig
 make zImage modules dtbs
+
+echo ================== Installing modules, dtbs and zImage
+make modules_install
+make dtbs_install
+cp arch/arm/boot/zImage /boot/zImage
