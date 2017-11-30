@@ -16,7 +16,7 @@ MD5="7b521dea79ab159e8ec879d2333369fa"
 for i in PATCH{1..10}; do
    unset $i
 done
-PATCH1="http://anduin.linuxfromscratch.org/BLFS/other/certdata.txt 863ba298e1a27e53828a6e60bf1291aa"
+PATCH1="http://anduin.linuxfromscratch.org/BLFS/other/certdata.txt ebe445261a003afcea6de50d33be59b3"
 
 ( cat << "xEOFx"
 
