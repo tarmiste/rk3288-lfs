@@ -1,0 +1,207 @@
+diff -Naur lfs-7.9/chapter05/binutils-pass1.xml lfs-7.9arm/chapter05/binutils-pass1.xml
+--- lfs-7.9/chapter05/binutils-pass1.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter05/binutils-pass1.xml	2016-04-04 14:01:02.950020766 +0000
+@@ -151,6 +151,7 @@
+ 
+ <screen><userinput remap="install">case $(uname -m) in
+   x86_64) mkdir -v /tools/lib &amp;&amp; ln -sv lib /tools/lib64 ;;
++  ppc64) mkdir -v /tools/lib &amp;&amp; ln -sv lib /tools/lib64 ;;
+ esac</userinput></screen>
+ 
+     <para>Install the package:</para>
+diff -Naur lfs-7.9/chapter05/gcc-pass1.xml lfs-7.9arm/chapter05/gcc-pass1.xml
+--- lfs-7.9/chapter05/gcc-pass1.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter05/gcc-pass1.xml	2016-04-04 14:05:12.321461580 +0000
+@@ -55,7 +55,8 @@
+     directory and then change to the directory created.  Only then should you
+     proceed with the instructions below.</para></note>
+ 
+-<screen><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
++<screen><userinput remap="pre">patch -Np1 -i ../gcc-5.3.0-rk3288-cpu.patch
++tar -xf ../mpfr-&mpfr-version;.tar.xz
+ mv -v mpfr-&mpfr-version; mpfr
+ tar -xf ../gmp-&gmp-version;.tar.xz
+ mv -v gmp-&gmp-extracted-version; gmp
+@@ -69,7 +70,7 @@
+     Issue:</para>
+ 
+ <screen><userinput remap="pre">for file in \
+- $(find gcc/config -name linux64.h -o -name linux.h -o -name sysv4.h)
++ $(find gcc/config -name linux64.h -o -name linux.h -o -name sysv4.h -o -name linux-eabi.h -o -name linux-elf.h)
+ do
+   cp -uv $file{,.orig}
+   sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&amp;@g' \
+@@ -224,9 +225,18 @@
+ 
+     </variablelist>
+ 
++    <para> Workaround a build problem with GMP:</para>
++
++    <screen><userinput remap="pre"> 
++    case $(uname -m) in
++      armv5l) sed -i 's/none-/armv5l-/' Makefile ;;
++      armv6l) sed -i 's/none-/armv6l-/' Makefile ;;
++      armv7l) sed -i 's/none-/armv7l-/' Makefile ;;
++    esac </userinput></screen>
++
+     <para>Compile GCC by running:</para>
+ 
+-<screen><userinput remap="make">make</userinput></screen>
++<screen><userinput remap="make"> make</userinput></screen>
+ 
+     <para>Compilation is now complete. At this point, the test suite would
+     normally be run, but, as mentioned before, the test suite framework is
+diff -Naur lfs-7.9/chapter05/gcc-pass2.xml lfs-7.9arm/chapter05/gcc-pass2.xml
+--- lfs-7.9/chapter05/gcc-pass2.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter05/gcc-pass2.xml	2016-04-04 14:05:57.800837508 +0000
+@@ -71,7 +71,7 @@
+     class="directory">/tools</filename>.</para>
+ 
+ <screen><userinput remap="pre">for file in \
+- $(find gcc/config -name linux64.h -o -name linux.h -o -name sysv4.h)
++ $(find gcc/config -name linux64.h -o -name linux.h -o -name sysv4.h -o -name linux-eabi.h -o -name linux-elf.h)
+ do
+   cp -uv $file{,.orig}
+   sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&amp;@g' \
+@@ -88,7 +88,8 @@
+     packages. Unpack the tarballs and move them into the required directory
+     names:</para>
+ 
+-<screen><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
++<screen><userinput remap="pre">patch -Np1 -i ../gcc-5.3.0-rk3288-cpu.patch
++tar -xf ../mpfr-&mpfr-version;.tar.xz
+ mv -v mpfr-&mpfr-version; mpfr
+ tar -xf ../gmp-&gmp-version;.tar.xz
+ mv -v gmp-&gmp-extracted-version; gmp
+@@ -159,6 +160,15 @@
+ 
+     </variablelist>
+ 
++    <para> Workaround a build problem with GMP:</para>
++
++    <screen><userinput remap="pre"> 
++    case $(uname -m) in
++      armv5l) sed -i 's/none-/armv5l-/' Makefile ;;
++      armv6l) sed -i 's/none-/armv6l-/' Makefile ;;
++      armv7l) sed -i 's/none-/armv7l-/' Makefile ;;
++    esac </userinput></screen>
++
+     <para>Compile the package:</para>
+ 
+ <screen><userinput remap="make">make</userinput></screen>
+diff -Naur lfs-7.9/chapter06/adjusting.xml lfs-7.9arm/chapter06/adjusting.xml
+--- lfs-7.9/chapter06/adjusting.xml	2016-04-04 13:59:18.146587395 +0000
++++ lfs-7.9arm/chapter06/adjusting.xml	2016-04-04 14:01:02.950020766 +0000
+@@ -16,13 +16,13 @@
+ 
+   <para>First, backup the <filename class="directory">/tools</filename> linker,
+   and replace it with the adjusted linker we made in chapter 5. We'll also create
+-  a link to its counterpart in
+-  <filename class="directory">/tools/$(uname -m)-pc-linux-gnu/bin</filename>:</para>
++  a link to its counterpart in <filename class="directory">/tools/$(gcc
++  -dumpmachine)/bin</filename>:</para>
+ 
+ <screen><userinput>mv -v /tools/bin/{ld,ld-old}
+-mv -v /tools/$(uname -m)-pc-linux-gnu/bin/{ld,ld-old}
++mv -v /tools/$(gcc -dumpmachine)/bin/{ld,ld-old}
+ mv -v /tools/bin/{ld-new,ld}
+-ln -sv /tools/bin/ld /tools/$(uname -m)-pc-linux-gnu/bin/ld</userinput></screen>
++ln -sv /tools/bin/ld /tools/$(gcc -dumpmachine)/bin/ld</userinput></screen>
+ 
+   <para>Next, amend the GCC specs file so that it points to the new
+   dynamic linker. Simply deleting all instances of <quote>/tools</quote> should
+diff -Naur lfs-7.9/chapter06/chapter06.xml lfs-7.9arm/chapter06/chapter06.xml
+--- lfs-7.9/chapter06/chapter06.xml	2016-04-04 13:59:18.146587395 +0000
++++ lfs-7.9arm/chapter06/chapter06.xml	2016-04-04 14:01:02.950020766 +0000
+@@ -73,7 +73,6 @@
+ 
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="groff.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="xz.xml"/>
+-  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="grub.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="less.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gzip.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="iproute2.xml"/>
+diff -Naur lfs-7.9/chapter06/creatingdirs.xml lfs-7.9arm/chapter06/creatingdirs.xml
+--- lfs-7.9/chapter06/creatingdirs.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter06/creatingdirs.xml	2016-04-04 14:01:02.950020766 +0000
+@@ -27,6 +27,9 @@
+  x86_64) ln -sv lib /lib64
+          ln -sv lib /usr/lib64
+          ln -sv lib /usr/local/lib64 ;;
++ ppc64) ln -sv lib /lib64
++         ln -sv lib /usr/lib64
++         ln -sv lib /usr/local/lib64 ;;
+ esac
+ 
+ mkdir -v /var/{log,mail,spool}
+diff -Naur lfs-7.9/chapter06/gcc.xml lfs-7.9arm/chapter06/gcc.xml
+--- lfs-7.9/chapter06/gcc.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter06/gcc.xml	2016-04-04 14:07:27.043065013 +0000
+@@ -47,7 +47,8 @@
+ -->
+     <para>The GCC documentation recommends building GCC in a dedicated build directory:</para>
+ 
+-<screen><userinput remap="pre">mkdir -v build
++<screen><userinput remap="pre">patch -Np1 -i ../gcc-5.3.0-rk3288-cpu.patch
++mkdir -v build
+ cd       build</userinput></screen>
+ 
+     <para>Prepare GCC for compilation:</para>
+diff -Naur lfs-7.9/chapter06/libcap.xml lfs-7.9arm/chapter06/libcap.xml
+--- lfs-7.9/chapter06/libcap.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter06/libcap.xml	2016-04-04 14:01:02.950020766 +0000
+@@ -47,6 +47,13 @@
+ 
+ <screen><userinput remap="pre">sed -i '/install.*STALIBNAME/d' libcap/Makefile</userinput></screen>
+ 
++    <para>Make a fix for ppc64 support:</para>
++
++<screen><userinput remap="pre">case $(uname -m) in
++ ppc64) sed -i 's@ld-linux|ld.so@ld-linux|ld.so|ld64.so@' Make.Rules ;;
++ *) ;;
++esac </userinput></screen>
++
+     <para>Compile the package:</para>
+ 
+ <screen><userinput remap="make">make</userinput></screen>
+diff -Naur lfs-7.9/chapter06/revisedchroot.xml lfs-7.9arm/chapter06/revisedchroot.xml
+--- lfs-7.9/chapter06/revisedchroot.xml	2016-04-04 13:59:18.136586941 +0000
++++ lfs-7.9arm/chapter06/revisedchroot.xml	2016-04-04 14:01:02.950020766 +0000
+@@ -46,12 +46,12 @@
+   libraries are from binutils, bzip2, e2fsprogs, flex, libtool, and zlib.  If desired,
+   remove them now:</para>
+ 
+-<screen><userinput>rm -f /usr/lib/lib{bfd,opcodes}.a
+-rm -f /usr/lib/libbz2.a
+-rm -f /usr/lib/lib{com_err,e2p,ext2fs,ss}.a
+-rm -f /usr/lib/libltdl.a
+-rm -f /usr/lib/libfl.a
+-rm -f /usr/lib/libfl_pic.a
+-rm -f /usr/lib/libz.a</userinput></screen>
++<screen><userinput>#rm -f /usr/lib/lib{bfd,opcodes}.a
++#rm -f /usr/lib/libbz2.a
++#rm -f /usr/lib/lib{com_err,e2p,ext2fs,ss}.a
++#rm -f /usr/lib/libltdl.a
++#rm -f /usr/lib/libfl.a
++#rm -f /usr/lib/libfl_pic.a
++#rm -f /usr/lib/libz.a</userinput></screen>
+ 
+ </sect1>
+diff -Naur lfs-7.9/chapter08/kernel.xml lfs-7.9arm/chapter08/kernel.xml
+--- lfs-7.9/chapter08/kernel.xml	2016-04-04 13:59:17.846573760 +0000
++++ lfs-7.9arm/chapter08/kernel.xml	2016-04-04 14:01:02.960021439 +0000
+@@ -167,7 +167,13 @@
+     the automatic setup of the boot process described in the next section.  The
+     following command assumes an x86 architecture:</para>
+ 
+-<screen><userinput remap="install">cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version;</userinput></screen>
++<screen><userinput remap="install">case $(uname -m) in
++      x86_64) cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      *86) cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      ppc*) cp -v vmlinux /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      arm*) cp -v vmlinux /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      esac
++</userinput></screen>
+ 
+     <para><filename>System.map</filename> is a symbol file for the kernel.
+     It maps the function entry points of every function in the kernel API,
