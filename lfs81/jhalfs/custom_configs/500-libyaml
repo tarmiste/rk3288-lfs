@@ -1,0 +1,23 @@
+# 500-libyaml
+#
+#
+# Any comments you wish to add
+#
+
+PKG="libyaml"
+PKG_VERSION="0.1.7"
+PKG_FILE="yaml-0.1.7.tar.gz "
+URL="http://pyyaml.org/download/libyaml/yaml-0.1.7.tar.gz"
+MD5="1abf45bd3a96374fa55ca63b32f9f2f9"
+for i in PATCH{1..10}; do
+   unset $i
+done
+PATCH1=""
+
+( cat << "xEOFx"
+   ./configure --prefix=/usr
+   make
+   #make check
+   make install
+xEOFx
+) > tmp

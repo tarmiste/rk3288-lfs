@@ -1,0 +1,219 @@
+diff -Naur lfs-8.1/chapter05/binutils-pass1.xml lfs-8.1arm/chapter05/binutils-pass1.xml
+--- lfs-8.1/chapter05/binutils-pass1.xml	2017-11-27 21:35:47.353820885 +0000
++++ lfs-8.1arm/chapter05/binutils-pass1.xml	2017-11-27 21:37:23.179776379 +0000
+@@ -151,6 +151,7 @@
+ 
+ <screen><userinput remap="install">case $(uname -m) in
+   x86_64) mkdir -v /tools/lib &amp;&amp; ln -sv lib /tools/lib64 ;;
++  ppc64) mkdir -v /tools/lib &amp;&amp; ln -sv lib /tools/lib64 ;;
+ esac</userinput></screen>
+ 
+     <para>Install the package:</para>
+diff -Naur lfs-8.1/chapter05/gcc-pass1.xml lfs-8.1arm/chapter05/gcc-pass1.xml
+--- lfs-8.1/chapter05/gcc-pass1.xml	2017-11-27 21:35:47.353820885 +0000
++++ lfs-8.1arm/chapter05/gcc-pass1.xml	2017-11-27 21:40:09.839096621 +0000
+@@ -55,7 +55,8 @@
+     directory and then change to the directory created.  Only then should you
+     proceed with the instructions below.</para></note>
+ 
+-<screen><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
++<screen><userinput remap="pre">patch -Np1 -i ../gcc-7.2.0-rk3288-cpu.patch
++tar -xf ../mpfr-&mpfr-version;.tar.xz
+ mv -v mpfr-&mpfr-version; mpfr
+ tar -xf ../gmp-&gmp-version;.tar.xz
+ mv -v gmp-&gmp-version; gmp
+@@ -68,7 +69,7 @@
+     class="directory">/usr/include</filename> from GCC's include search path.
+     Issue:</para>
+ 
+-<screen><userinput remap="pre">for file in gcc/config/{linux,i386/linux{,64}}.h
++<screen><userinput remap="pre">for file in gcc/config/arm/linux-eabi.h
+ do
+   cp -uv $file{,.orig}
+   sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&amp;@g' \
+@@ -237,7 +238,7 @@
+ 
+     <para>Compile GCC by running:</para>
+ 
+-<screen><userinput remap="make">make</userinput></screen>
++<screen><userinput remap="make"> make</userinput></screen>
+ 
+     <para>Compilation is now complete. At this point, the test suite would
+     normally be run, but, as mentioned before, the test suite framework is
+diff -Naur lfs-8.1/chapter05/gcc-pass2.xml lfs-8.1arm/chapter05/gcc-pass2.xml
+--- lfs-8.1/chapter05/gcc-pass2.xml	2017-11-27 21:35:47.353820885 +0000
++++ lfs-8.1arm/chapter05/gcc-pass2.xml	2017-11-27 21:40:19.519287283 +0000
+@@ -70,7 +70,7 @@
+     use the one installed in <filename
+     class="directory">/tools</filename>.</para>
+ 
+-<screen><userinput remap="pre">for file in gcc/config/{linux,i386/linux{,64}}.h
++<screen><userinput remap="pre">for file in gcc/config/arm/linux-eabi.h
+ do
+   cp -uv $file{,.orig}
+   sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&amp;@g' \
+@@ -97,7 +97,8 @@
+     packages. Unpack the tarballs and move them into the required directory
+     names:</para>
+ 
+-<screen><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
++<screen><userinput remap="pre">patch -Np1 -i ../gcc-7.2.0-rk3288-cpu.patch
++tar -xf ../mpfr-&mpfr-version;.tar.xz
+ mv -v mpfr-&mpfr-version; mpfr
+ tar -xf ../gmp-&gmp-version;.tar.xz
+ mv -v gmp-&gmp-version; gmp
+diff -Naur lfs-8.1/chapter05/glibc.xml lfs-8.1arm/chapter05/glibc.xml
+--- lfs-8.1/chapter05/glibc.xml	2017-11-27 21:35:47.353820885 +0000
++++ lfs-8.1arm/chapter05/glibc.xml	2017-11-27 21:37:23.179776379 +0000
+@@ -146,6 +146,7 @@
+     <para>Install the package:</para>
+ 
+ <screen><userinput remap="install">make install</userinput></screen>
++<screen><userinput>ln -sv ld-2.26.so $LFS/tools/lib/ld-linux.so.3</userinput></screen>
+ 
+   <caution>
+     <para>At this point, it is imperative to stop and ensure that the basic
+diff -Naur lfs-8.1/chapter06/adjusting.xml lfs-8.1arm/chapter06/adjusting.xml
+--- lfs-8.1/chapter06/adjusting.xml	2017-11-27 21:35:47.361821050 +0000
++++ lfs-8.1arm/chapter06/adjusting.xml	2017-11-27 21:37:23.179776379 +0000
+@@ -16,13 +16,13 @@
+ 
+   <para>First, backup the <filename class="directory">/tools</filename> linker,
+   and replace it with the adjusted linker we made in chapter 5. We'll also create
+-  a link to its counterpart in
+-  <filename class="directory">/tools/$(uname -m)-pc-linux-gnu/bin</filename>:</para>
++  a link to its counterpart in <filename class="directory">/tools/$(gcc
++  -dumpmachine)/bin</filename>:</para>
+ 
+ <screen><userinput>mv -v /tools/bin/{ld,ld-old}
+-mv -v /tools/$(uname -m)-pc-linux-gnu/bin/{ld,ld-old}
++mv -v /tools/$(gcc -dumpmachine)/bin/{ld,ld-old}
+ mv -v /tools/bin/{ld-new,ld}
+-ln -sv /tools/bin/ld /tools/$(uname -m)-pc-linux-gnu/bin/ld</userinput></screen>
++ln -sv /tools/bin/ld /tools/$(gcc -dumpmachine)/bin/ld</userinput></screen>
+ 
+   <para>Next, amend the GCC specs file so that it points to the new
+   dynamic linker. Simply deleting all instances of <quote>/tools</quote> should
+diff -Naur lfs-8.1/chapter06/chapter06.xml lfs-8.1arm/chapter06/chapter06.xml
+--- lfs-8.1/chapter06/chapter06.xml	2017-11-27 21:35:47.361821050 +0000
++++ lfs-8.1arm/chapter06/chapter06.xml	2017-11-27 21:37:23.179776379 +0000
+@@ -69,7 +69,6 @@
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gawk.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="findutils.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="groff.xml"/>
+-  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="grub.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="less.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gzip.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="iproute2.xml"/>
+diff -Naur lfs-8.1/chapter06/gcc.xml lfs-8.1arm/chapter06/gcc.xml
+--- lfs-8.1/chapter06/gcc.xml	2017-11-27 21:35:47.357820968 +0000
++++ lfs-8.1arm/chapter06/gcc.xml	2017-11-27 21:40:36.739626004 +0000
+@@ -58,7 +58,8 @@
+ 
+     <para>The GCC documentation recommends building GCC in a dedicated build directory:</para>
+ 
+-<screen><userinput remap="pre">mkdir -v build
++<screen><userinput remap="pre">patch -Np1 -i ../gcc-7.2.0-rk3288-cpu.patch
++mkdir -v build
+ cd       build</userinput></screen>
+ 
+     <para>Prepare GCC for compilation:</para>
+diff -Naur lfs-8.1/chapter06/glibc.xml lfs-8.1arm/chapter06/glibc.xml
+--- lfs-8.1/chapter06/glibc.xml	2017-11-27 21:35:47.357820968 +0000
++++ lfs-8.1arm/chapter06/glibc.xml	2017-11-27 21:37:23.183776460 +0000
+@@ -67,8 +67,7 @@
+     required for the dynamic loader to function correctly:</para>
+ 
+ <screen><userinput remap="pre">case $(uname -m) in
+-    i?86)    GCC_INCDIR=/usr/lib/gcc/$(uname -m)-pc-linux-gnu/&gcc-version;/include
+-            ln -sfv ld-linux.so.2 /lib/ld-lsb.so.3
++    arm*)    GCC_INCDIR=/usr/lib/gcc/$(gcc -dumpmachine)/7.2.0/include
+     ;;
+     x86_64) GCC_INCDIR=/usr/lib/gcc/x86_64-pc-linux-gnu/&gcc-version;/include
+             ln -sfv ../lib/ld-linux-x86-64.so.2 /lib64
+@@ -440,6 +439,7 @@
+ </literal>
+ EOF
+ mkdir -pv /etc/ld.so.conf.d</userinput></screen>
++<screen><userinput>#ln -sv ld-2.26.so $LFS/tools/lib/ld-linux.so.3</userinput></screen>
+ 
+   </sect3>
+   </sect2>
+diff -Naur lfs-8.1/chapter06/libcap.xml lfs-8.1arm/chapter06/libcap.xml
+--- lfs-8.1/chapter06/libcap.xml	2017-11-27 21:35:47.357820968 +0000
++++ lfs-8.1arm/chapter06/libcap.xml	2017-11-27 21:37:23.183776460 +0000
+@@ -47,6 +47,13 @@
+ 
+ <screen><userinput remap="pre">sed -i '/install.*STALIBNAME/d' libcap/Makefile</userinput></screen>
+ 
++    <para>Make a fix for ppc64 support:</para>
++
++<screen><userinput remap="pre">case $(uname -m) in
++ ppc64) sed -i 's@ld-linux|ld.so@ld-linux|ld.so|ld64.so@' Make.Rules ;;
++ *) ;;
++esac </userinput></screen>
++
+     <para>Compile the package:</para>
+ 
+ <screen><userinput remap="make">make</userinput></screen>
+diff -Naur lfs-8.1/chapter06/revisedchroot.xml lfs-8.1arm/chapter06/revisedchroot.xml
+--- lfs-8.1/chapter06/revisedchroot.xml	2017-11-27 21:35:47.357820968 +0000
++++ lfs-8.1arm/chapter06/revisedchroot.xml	2017-11-27 21:37:23.183776460 +0000
+@@ -46,12 +46,12 @@
+   libraries are from binutils, bzip2, e2fsprogs, flex, libtool, and zlib.  If desired,
+   remove them now:</para>
+ 
+-<screen><userinput>rm -f /usr/lib/lib{bfd,opcodes}.a
+-rm -f /usr/lib/libbz2.a
+-rm -f /usr/lib/lib{com_err,e2p,ext2fs,ss}.a
+-rm -f /usr/lib/libltdl.a
+-rm -f /usr/lib/libfl.a
+-rm -f /usr/lib/libfl_pic.a
+-rm -f /usr/lib/libz.a</userinput></screen>
++<screen><userinput>#rm -f /usr/lib/lib{bfd,opcodes}.a
++#rm -f /usr/lib/libbz2.a
++#rm -f /usr/lib/lib{com_err,e2p,ext2fs,ss}.a
++#rm -f /usr/lib/libltdl.a
++#rm -f /usr/lib/libfl.a
++#rm -f /usr/lib/libfl_pic.a
++#rm -f /usr/lib/libz.a</userinput></screen>
+ 
+ </sect1>
+diff -Naur lfs-8.1/chapter08/kernel.xml lfs-8.1arm/chapter08/kernel.xml
+--- lfs-8.1/chapter08/kernel.xml	2017-11-27 21:35:47.365821133 +0000
++++ lfs-8.1arm/chapter08/kernel.xml	2017-11-27 21:37:23.183776460 +0000
+@@ -231,7 +231,13 @@
+     the automatic setup of the boot process described in the next section.  The
+     following command assumes an x86 architecture:</para>
+ 
+-<screen revision="sysv"><userinput remap="install">cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version;</userinput></screen>
++<screen revision="sysv"><userinput remap="install">case $(uname -m) in
++      x86_64) cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      *86) cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      ppc*) cp -v vmlinux /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      arm*) cp -v vmlinux /boot/vmlinuz-&linux-version;-lfs-&version; ;;
++      esac
++</userinput></screen>
+ 
+ <screen revision="systemd"><userinput remap="install">cp -v arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&versiond;</userinput></screen>
+ 
+diff -Naur lfs-8.1/packages.ent lfs-8.1arm/packages.ent
+--- lfs-8.1/packages.ent	2017-11-27 21:35:47.365821133 +0000
++++ lfs-8.1arm/packages.ent	2017-11-27 21:47:45.306005803 +0000
+@@ -399,13 +399,13 @@
+ <!ENTITY libtool-ch6-sbu "1.8 SBU">
+ 
+ <!ENTITY linux-major-version "4">
+-<!ENTITY linux-minor-version "12">
+-<!ENTITY linux-patch-version "7">
++<!ENTITY linux-minor-version "14">
++<!ENTITY linux-patch-version "1">
+ <!--<!ENTITY linux-version "&linux-major-version;.&linux-minor-version;">-->
+ <!ENTITY linux-version "&linux-major-version;.&linux-minor-version;.&linux-patch-version;">
+ <!ENTITY linux-size "96,865 KB">
+ <!ENTITY linux-url "&kernel;linux/kernel/v&linux-major-version;.x/linux-&linux-version;.tar.xz">
+-<!ENTITY linux-md5 "245d1b4dc6e82669aac2c9e6a2dd82fe">
++<!ENTITY linux-md5 "5de15914005314d964f37cff85a59048">
+ <!ENTITY linux-home "http://www.kernel.org/">
+ <!-- measured for 4.8.3 / gcc-6.2.0 on x86_64 : minimum is
+  allnoconfig extended for a hopefully-bootable build on desktop machine,

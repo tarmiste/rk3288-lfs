@@ -1,0 +1,25 @@
+# 690-dtc
+#
+#
+# Any comments you wish to add
+#
+
+PKG="dtc"
+PKG_VERSION="1.4.5"
+PKG_FILE="dtc-1.4.5.tar.xz "
+URL="https://www.kernel.org/pub/software/utils/dtc/dtc-1.4.5.tar.xz"
+MD5="1c7483058beea467a11c73439bab9759"
+for i in PATCH{1..10}; do
+   unset $i
+done
+PATCH1="fix32bit.patch ffb47b68d3a3a6d4533f08c06eb3b776"
+
+( cat << "xEOFx"
+    sed -i 's/-Werror//' Makefile
+    sed -i 's/python\b/python2/' tests/run_tests.sh
+    patch -p1 < ../fix32bit.patch
+    make
+    #make check
+    make DESTDIR=/ SETUP_PREFIX=/usr PREFIX=/usr install-bin
+xEOFx
+) > tmp

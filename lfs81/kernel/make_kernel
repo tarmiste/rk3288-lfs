@@ -1,0 +1,27 @@
+#
+# build linux 4.14 kernel for armv7
+#
+export ARCH=arm
+tar xf /sources/linux-4.14.tar.xz
+mv linux-4.14 linux-4.14patched
+cd linux-4.14patched
+#
+# add patches
+#
+cat /sources/0001-ARM-atags-add-support-for-Marvell-s-u-boot.patch |patch -Np1
+cat /sources/0002-ARM-atags-fdt-retrieve-MAC-addresses-from-Marvell-bo.patch |patch -Np1
+cat /sources/0003-SMILE-Plug-device-tree-file.patch |patch -Np1
+cat /sources/0004-fix-mvsdio-eMMC-timing.patch |patch -Np1
+cat /sources/0005-net-smsc95xx-Allow-mac-address-to-be-set-as-a-parame.patch |patch -Np1
+cat /sources/0006-set-default-cubietruck-led-triggers.patch |patch -Np1
+cat /sources/0007-exynos4412-odroid-set-higher-minimum-buck2-regulator.patch |patch -Np1
+cat /sources/0008-disable-USB3-port-on-ODROID-XU.patch |patch -Np1
+cat /sources/0009-ARM-dove-enable-ethernet-on-D3Plug.patch |patch -Np1
+zcat /sources/patch-4.14-armv7-x0.diff.gz |patch -Np1
+#
+# configure and build
+#
+make mrproper
+cp /sources/lfs81_lx4.14_config .config
+make oldconfig
+make zImage modules dtbs

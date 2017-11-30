@@ -1,0 +1,27 @@
+# 520-uboot-tools
+#
+#
+# Any comments you wish to add
+#
+
+PKG="uboot-tools"
+PKG_VERSION="2017.11"
+PKG_FILE="u-boot-2017.11.tar.bz2"
+URL="ftp://ftp.denx.de/pub/u-boot/u-boot-2017.11.tar.bz2"
+MD5="7848f6fd197e2c6ef2eb483dd5bd2858"
+for i in PATCH{1..10}; do
+   unset $i
+done
+PATCH1=""
+
+( cat << "xEOFx"
+    make defconfig
+    make tools CONFIG_KIRKWOOD=y
+    make tools-all CONFIG_KIRKWOOD=y
+    
+    install -m755 tools/{fit_{check_sign,info},dumpimage,mkimage,mkenvimage,netconsole,ncb,proftool,env/fw_printenv,kwboot} /usr/bin
+    ln -s /usr/bin/fw_printenv /usr/bin/fw_setenv
+    #install -m644 ${srcdir}/fw_env.config /etc
+    #install -m644 doc/{mkimage,kwboot}.1 /usr/share/man/man1
+xEOFx
+) > tmp

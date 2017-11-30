@@ -1,0 +1,22 @@
+# 500-vboot_reference
+#
+#
+# Any comments you wish to add
+#
+
+PKG="vboot_reference_171123"
+PKG_VERSION="171123"
+PKG_FILE="vboot_reference_171123.tar.xz"
+URL="https://none"
+MD5="b8b07e95128d43c462c356169ee67a3d"
+for i in PATCH{1..10}; do
+   unset $i
+done
+PATCH1=""
+
+( cat << "xEOFx"
+  sed -i 's/-Werror//g' Makefile
+  ARCH=arm make V=1
+  make DESTDIR=/usr install
+xEOFx
+) > tmp

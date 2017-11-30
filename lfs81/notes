@@ -1,0 +1,15 @@
+
+Notes on adapting LFS 8.1 to the Rockchip 3288:
+
+Tuplet needs to be changed to end with linux-gnueabihf
+
+GCC req
+
+building rk3288 kernel on LFS8.1 requires Python2 and openssl.  
+Libffi is recommended Python dependency
+
+packaging the rk3288 kernel requires uboot-tools, vboot-utils,
+libyaml, sdl and dtc.
+
+Have to manually add extra firmware files.
+
